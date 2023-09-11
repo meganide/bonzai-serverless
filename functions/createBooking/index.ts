@@ -4,7 +4,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import { nanoid } from "nanoid"
 
 import { errorHandler } from "../../middlewares/jsonErrorHandler.ts"
-import { schemaValidation } from "../../middlewares/schemaValidation.ts"
+import { zodValidation } from "../../middlewares/zodValidation.ts"
 import { sendResponse } from "../../responses/index.ts"
 import { db } from "../../services/db.ts"
 import { Booking, BookingSchema } from "../../types/bookingSchema.ts"
@@ -21,7 +21,7 @@ async function createBooking(
   // Calculate the number of allowed guests by the sum of MAX_GUESTS (you get max guests for each room type from the DB) for each room * number of those rooms in booking
   // Compare against
 
-  // Get corresponding roomIds and then map those in the batchWrite
+  // Get corresponding roomIds from DB and then map those in the batchWrite
 
   const roomId = 3
 
@@ -79,6 +79,6 @@ async function createBooking(
 
 export const handler = middy(createBooking)
   .use(jsonBodyParser())
-  .use(schemaValidation(BookingSchema))
+  .use(zodValidation(BookingSchema))
   .use(errorHandler())
   .handler(createBooking)

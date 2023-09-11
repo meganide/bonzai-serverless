@@ -3,7 +3,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import createError from "http-errors"
 import z from "zod"
 
-export function schemaValidation(
+export function zodValidation(
   schema: z.AnyZodObject | z.ZodOptional<z.AnyZodObject>
 ): middy.MiddlewareObj<APIGatewayProxyEvent, APIGatewayProxyResult> {
   return {
