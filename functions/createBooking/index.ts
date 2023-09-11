@@ -1,33 +1,32 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 
+<<<<<<< HEAD
 import { sendResponse } from "../../responses/index.ts"
 import { db } from "../../services/db.ts"
+=======
+import middy from "@middy/core"
+import jsonBodyParser from "@middy/http-json-body-parser"
+
+>>>>>>> 02e9246 (feat: add error handling middleware)
 import { nanoid } from "nanoid"
+
+import { sendResponse } from "../../responses/index.ts"
 import { BookingSchema } from "../../types/schema.ts"
-import { validateSchema } from "../../utils/schemaValidation.ts"
+import { schemaValidation } from "../../middlewares/schemaValidation.ts"
+import { errorHandlers } from "../../middlewares/errorHandler.ts"
 
-export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: APIGatewayProxyResult
-) => {
-  if (!event.body) {
-    return sendResponse(400, {
-      success: false,
-      message: "The request body is missing or empty."
-    })
-  }
-  const body = JSON.parse(event.body)
-
-  try {
-    await validateSchema(BookingSchema, body)
-    const bookingId = nanoid()
-
-    return sendResponse(200, { test: "hej" })
-  } catch (error) {
-    console.log(error)
-    return sendResponse(500, {
-      success: false,
-      message: "Something went wrong, could not get any events."
-    })
-  }
+const lambdaHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  const body = event.body
+  const bookingId = nanoid()
+  return sendResponse(200, { test: "hej" })
 }
+
+export const handler = middy(lambdaHandler)
+
+handler
+  .use(jsonBodyParser())
+  .use(schemaValidation(BookingSchema))
+  .use(errorHandlers)
+  .handler(lambdaHandler)

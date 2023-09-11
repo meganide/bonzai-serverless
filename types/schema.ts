@@ -1,6 +1,7 @@
 import z from "zod"
-import { isValidDateFormat } from "../utils/date.ts"
+
 import { RoomType } from "./types.ts"
+import { isValidDateFormat } from "../utils/date.ts"
 
 export const BookingSchema = z.object({
   firstName: z.string({ required_error: "First name is required." }).min(1),
@@ -38,4 +39,8 @@ export const BookingSchema = z.object({
         message: "You must book at least one room!"
       }
     )
+    .optional()
+    .refine((value) => value !== undefined, {
+      message: "Rooms is required."
+    })
 })
