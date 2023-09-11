@@ -2,8 +2,8 @@ export function sendResponse(statusCode: number, response: any) {
   return {
     statusCode: statusCode,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify(response),
-  };
+    body: JSON.stringify(response)
+  }
 }

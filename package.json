@@ -13,6 +13,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
+    "@trivago/prettier-plugin-sort-imports": "^4.2.0",
     "@types/aws-lambda": "^8.10.119",
     "aws-sdk": "^2.1454.0",
     "husky": "^8.0.3",
