@@ -13,7 +13,7 @@ const createBooking = async (
 ): Promise<APIGatewayProxyResult> => {
   const body = event.body
   const bookingId = nanoid()
-  return sendResponse(200, { test: "hej" })
+  return sendResponse(200, { success: true, test: "hej" })
 }
 
 export const handler = middy(createBooking)

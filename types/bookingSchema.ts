@@ -3,20 +3,44 @@ import z from "zod"
 import { RoomType } from "./types.ts"
 
 export const BookingSchema = z.object({
-  firstName: z.string({ required_error: "First name is required." }).min(1),
-  lastName: z.string({ required_error: "Last name is required." }).min(1),
-  email: z.string({ required_error: "Email is required." }).email(),
+  firstName: z
+    .string({
+      required_error: "First name is required.",
+      invalid_type_error: "First name must be a string."
+    })
+    .min(1),
+  lastName: z
+    .string({
+      required_error: "Last name is required.",
+      invalid_type_error: "Last name must be a string."
+    })
+    .min(1),
+  email: z
+    .string({
+      required_error: "Email is required.",
+      invalid_type_error: "Email must be a string."
+    })
+    .email(),
   numberGuests: z
-    .number({ required_error: "Number of guests is required." })
+    .number({
+      required_error: "Number of guests is required.",
+      invalid_type_error: "Number of guests must be a number."
+    })
     .min(1)
     .max(3),
   checkInDate: z
-    .string({ required_error: "Check in date is required." })
+    .string({
+      required_error: "Check in date is required.",
+      invalid_type_error: "Check in date must be a string."
+    })
     .refine(isValidDateFormat, {
       message: "Invalid date format. Use YYYY-MM-DD."
     }),
   checkOutDate: z
-    .string({ required_error: "Check out date is required." })
+    .string({
+      required_error: "Check out date is required.",
+      invalid_type_error: "Check out date must be a string."
+    })
     .refine(isValidDateFormat, {
       message: "Invalid date format. Use YYYY-MM-DD."
     }),
