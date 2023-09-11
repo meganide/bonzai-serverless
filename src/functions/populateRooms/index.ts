@@ -1,7 +1,5 @@
+import { sendResponse } from "@/responses"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-
-import { sendResponse } from "../../responses/index.ts"
-import { db } from "../../services/db.ts"
 
 export const handler = async (
   event: APIGatewayProxyEvent,

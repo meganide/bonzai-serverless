@@ -1,14 +1,13 @@
+import { errorHandler } from "@/middlewares/jsonErrorHandler"
+import { zodValidation } from "@/middlewares/zodValidation.ts"
+import { sendResponse } from "@/responses/index.ts"
+import { db } from "@/services/db.ts"
+import { Booking, BookingSchema } from "@/types/bookingSchema"
+import { EntityTypes } from "@/types/types"
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import { nanoid } from "nanoid"
-
-import { errorHandler } from "../../middlewares/jsonErrorHandler.ts"
-import { zodValidation } from "../../middlewares/zodValidation.ts"
-import { sendResponse } from "../../responses/index.ts"
-import { db } from "../../services/db.ts"
-import { Booking, BookingSchema } from "../../types/bookingSchema.ts"
-import { EntityTypes } from "../../types/types.ts"
 
 async function createBooking(
   event: APIGatewayProxyEvent

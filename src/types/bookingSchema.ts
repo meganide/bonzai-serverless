@@ -1,6 +1,6 @@
 import z from "zod"
 
-import { RoomType } from "./types.ts"
+import { RoomType } from "./types"
 
 export const BookingSchema = z.object({
   firstName: z

@@ -25,11 +25,11 @@
     "@types/aws-lambda": "^8.10.119",
     "@types/http-errors": "^2.0.1",
     "aws-sdk": "^2.1454.0",
+    "esbuild": "^0.17.19",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
     "prettier": "3.0.3",
-    "serverless-webpack": "^5.13.0",
-    "ts-loader": "^9.4.4",
+    "serverless-esbuild": "^1.46.0",
     "typescript": "^5.2.2"
   },
   "lint-staged": {
