@@ -1,4 +1,4 @@
-import { sendResponse } from "@/responses"
+import { sendResponse } from "@/utils"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 
 export const handler = async (
