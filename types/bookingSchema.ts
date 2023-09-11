@@ -68,7 +68,13 @@ export const BookingSchema = z.object({
     })
 })
 
-export function isValidDateFormat(input: string): boolean {
+function isValidDateFormat(input: string): boolean {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/ // YYYY-MM-DD format
   return dateRegex.test(input)
 }
+
+const HasId = z.object({ id: z.string().min(1) })
+const BookingWithIdSchema = BookingSchema.merge(HasId)
+
+export type Booking = Required<z.infer<typeof BookingSchema>>
+export type BookingWithId = Required<z.infer<typeof BookingWithIdSchema>>

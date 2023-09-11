@@ -3,3 +3,8 @@ export enum RoomType {
   DOUBLE = "DOUBLE",
   SUITE = "SUITE"
 }
+
+export enum EntityTypes {
+  BOOKING = "Booking",
+  ROOM = "Room"
+}
