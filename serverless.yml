@@ -1,14 +1,16 @@
 service: bonzai
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   name: aws
   runtime: nodejs18.x
-  profile: renas # ÄNDRA DETTA TILL DIN EGNA PROFILE
+  profile: ${env:PROFILE}
   region: eu-north-1
   iam:
-    role: arn:aws:iam::111041186627:role/lecturerole  # ÄNDRA DETTA TILL DIN EGNA ROLE
+    role: ${env:LAMBDA_ROLE}
   deploymentMethod: direct
+
+useDotenv: true
 
 plugins:
   - serverless-webpack
@@ -17,47 +19,60 @@ package:
   individually: true
 
 functions:
-  getEvents:
-    handler: functions/getEvents/index.handler
+  getBookings:
+    handler: functions/getBookings/index.handler
     events:
       - httpApi:
-          path: '/api/events'
+          path: "/api/bookings"
           method: GET
-  orderTicket:
-    handler: functions/orderTicket/index.handler
+  createBooking:
+    handler: functions/createBooking/index.handler
     events:
       - httpApi:
-          path: '/api/events/{eventId}'
+          path: "/api/bookings"
           method: POST
-  verifyTicket:
-    handler: functions/verifyTicket/index.handler
+  updateBooking:
+    handler: functions/updateBooking/index.handler
     events:
       - httpApi:
-          path: '/api/tickets/{ticketId}'
-          method: PUT
+          path: "/api/bookings/{bookingId}"
+          method: PATCH
+  deleteBooking:
+    handler: functions/deleteBooking/index.handler
+    events:
+      - httpApi:
+          path: "/api/bookings/{bookingId}"
+          method: DELETE
+  populateRooms:
+    handler: functions/populateRooms/index.handler
 
 resources:
   Resources:
-    EventsTable:
+    Bonzai:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: events
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
+        TableName: Bonzai
         KeySchema:
-          - AttributeName: id
+          - AttributeName: PK
             KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-
-    TicketsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: tickets
+          - AttributeName: SK
+            KeyType: RANGE
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: PK
             AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
+          - AttributeName: SK
+            AttributeType: S
+          - AttributeName: GSI1-PK
+            AttributeType: S
+          - AttributeName: GSI1-SK
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: GSI1
+            KeySchema:
+              - AttributeName: GSI1-PK
+                KeyType: HASH
+              - AttributeName: GSI1-SK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
