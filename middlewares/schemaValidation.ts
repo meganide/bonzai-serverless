@@ -1,9 +1,6 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-
 import middy from "@middy/core"
-
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import createError from "http-errors"
-
 import z from "zod"
 
 export function schemaValidation(

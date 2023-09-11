@@ -1,7 +1,6 @@
 import z from "zod"
 
 import { RoomType } from "./types.ts"
-import { isValidDateFormat } from "../utils/date.ts"
 
 export const BookingSchema = z.object({
   firstName: z.string({ required_error: "First name is required." }).min(1),
@@ -44,3 +43,8 @@ export const BookingSchema = z.object({
       message: "Rooms is required."
     })
 })
+
+export function isValidDateFormat(input: string): boolean {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/ // YYYY-MM-DD format
+  return dateRegex.test(input)
+}

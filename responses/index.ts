@@ -4,6 +4,6 @@ export function sendResponse(statusCode: number, response: any) {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(response)
+    body: JSON.stringify({ success: true, ...response })
   }
 }

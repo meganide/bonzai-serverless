@@ -1,9 +1,8 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-
 import middy from "@middy/core"
 import httpErrorHandler from "@middy/http-error-handler"
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 
-function errorHandler(): middy.MiddlewareObj<
+function jsonErrorHandler(): middy.MiddlewareObj<
   APIGatewayProxyEvent,
   APIGatewayProxyResult
 > {
@@ -21,4 +20,4 @@ function errorHandler(): middy.MiddlewareObj<
   }
 }
 
-export const errorHandlers = [httpErrorHandler(), errorHandler()]
+export const errorHandler = () => [httpErrorHandler(), jsonErrorHandler()]

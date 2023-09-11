@@ -1,21 +1,14 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-
-<<<<<<< HEAD
-import { sendResponse } from "../../responses/index.ts"
-import { db } from "../../services/db.ts"
-=======
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
-
->>>>>>> 02e9246 (feat: add error handling middleware)
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import { nanoid } from "nanoid"
 
-import { sendResponse } from "../../responses/index.ts"
-import { BookingSchema } from "../../types/schema.ts"
+import { errorHandler } from "../../middlewares/jsonErrorHandler.ts"
 import { schemaValidation } from "../../middlewares/schemaValidation.ts"
-import { errorHandlers } from "../../middlewares/errorHandler.ts"
+import { sendResponse } from "../../responses/index.ts"
+import { BookingSchema } from "../../types/bookingSchema.ts"
 
-const lambdaHandler = async (
+const createBooking = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   const body = event.body
@@ -23,10 +16,8 @@ const lambdaHandler = async (
   return sendResponse(200, { test: "hej" })
 }
 
-export const handler = middy(lambdaHandler)
-
-handler
+export const handler = middy(createBooking)
   .use(jsonBodyParser())
   .use(schemaValidation(BookingSchema))
-  .use(errorHandlers)
-  .handler(lambdaHandler)
+  .use(errorHandler())
+  .handler(createBooking)
