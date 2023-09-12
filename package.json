@@ -10,17 +10,26 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "@middy/core": "^4.6.1",
+    "@middy/http-error-handler": "^4.6.1",
+    "@middy/http-json-body-parser": "^4.6.1",
+    "http-errors": "^2.0.0",
+    "nanoid": "^4.0.2",
+    "zod": "^3.22.2"
+  },
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
     "@trivago/prettier-plugin-sort-imports": "^4.2.0",
     "@types/aws-lambda": "^8.10.119",
+    "@types/http-errors": "^2.0.1",
     "aws-sdk": "^2.1454.0",
+    "esbuild": "^0.17.19",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
     "prettier": "3.0.3",
-    "serverless-webpack": "^5.13.0",
-    "ts-loader": "^9.4.4",
+    "serverless-esbuild": "^1.46.0",
     "typescript": "^5.2.2"
   },
   "lint-staged": {
