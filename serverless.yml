@@ -13,38 +13,43 @@ provider:
 useDotenv: true
 
 plugins:
-  - serverless-webpack
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    exclude: []
+    minify: true
 
 package:
   individually: true
 
 functions:
   getBookings:
-    handler: functions/getBookings/index.handler
+    handler: src/functions/getBookings/index.handler
     events:
       - httpApi:
           path: "/api/bookings"
           method: GET
   createBooking:
-    handler: functions/createBooking/index.handler
+    handler: src/functions/createBooking/index.handler
     events:
       - httpApi:
           path: "/api/bookings"
           method: POST
   updateBooking:
-    handler: functions/updateBooking/index.handler
+    handler: src/functions/updateBooking/index.handler
     events:
       - httpApi:
           path: "/api/bookings/{bookingId}"
           method: PATCH
   deleteBooking:
-    handler: functions/deleteBooking/index.handler
+    handler: src/functions/deleteBooking/index.handler
     events:
       - httpApi:
           path: "/api/bookings/{bookingId}"
           method: DELETE
   populateRooms:
-    handler: functions/populateRooms/index.handler
+    handler: src/functions/populateRooms/index.handler
 
 resources:
   Resources:
@@ -62,16 +67,16 @@ resources:
             AttributeType: S
           - AttributeName: SK
             AttributeType: S
-          - AttributeName: GSI1-PK
+          - AttributeName: GSI1PK
             AttributeType: S
-          - AttributeName: GSI1-SK
+          - AttributeName: GSI1SK
             AttributeType: S
         GlobalSecondaryIndexes:
           - IndexName: GSI1
             KeySchema:
-              - AttributeName: GSI1-PK
+              - AttributeName: GSI1PK
                 KeyType: HASH
-              - AttributeName: GSI1-SK
+              - AttributeName: GSI1SK
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL

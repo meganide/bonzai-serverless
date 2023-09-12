@@ -1,7 +1,8 @@
+import { sendResponse } from "@/utils"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-import { sendResponse } from "../../responses/index.ts"
-import { db } from "../../services/db.ts"
 import { DocumentClient } from "aws-sdk/clients/dynamodb"
+
+import { db } from "../../services/db.ts"
 import { RoomItem } from "../../types/types.ts"
 
 const params: DocumentClient.BatchWriteItemInput = {
