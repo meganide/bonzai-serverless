@@ -10,8 +10,10 @@ export enum EntityTypes {
 }
 
 export interface RoomItem {
-  entityType: string
-  type: string
-  maxGuests: number
-  pricePerNight: number
+  PK: string
+  SK: string
+  EntityType: string
+  Type: RoomType
+  MaxGuests: number
+  PricePerNight: number
 }
