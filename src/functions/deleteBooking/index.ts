@@ -1,35 +1,37 @@
+import { db } from "@/services"
 import { sendResponse } from "@/utils"
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
+import { APIGatewayProxyEvent,APIGatewayProxyResult, Context } from "aws-lambda"
 
-async function findMyBooking(partitionKey, sortKey) {
-  const params = {
+
+async function findMyBooking(partitionKey :number) {
+  const params: any = {
     TableName: "Bonzai",
-    Key: { PK: `b#${partitionKey}`, SK: `b#${sortKey}` }
+    KeyConditionExpression: 'PK = :partitionKey',
+    ExpressionAttributeValues: {':partitionKey': 'b#' + partitionKey}
   }
 
-  const { Item } = await db
-    .get(params, (error, data) => {
+  const {Items} = await db
+    .query(params, (error, data) => {
       if (error) {
         console.log(error)
       } else {
-        console.log(data.Item)
+        console.log(data)
       }
     })
     .promise()
-  return Item
+return Items
 }
+
 
 export const handler = async (
   event: APIGatewayProxyEvent,
-  context: APIGatewayProxyResult
-) => {
+  context: Context
+): Promise<APIGatewayProxyResult> => {
   try {
     const { bookingId } = event.pathParameters
-    console.log(event)
-    console.log("😂", bookingId)
-    const test = await findMyBooking(bookingId, bookingId)
-    console.log("😀", test)
-    return sendResponse(200, { test: "hej" })
+    const booking = await findMyBooking(bookingId)
+    console.log("😀", booking)
+    return sendResponse(200, { booking })
   } catch (error) {
     return sendResponse(500, {
       success: false,
