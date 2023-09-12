@@ -80,7 +80,6 @@ export const handler = async (
         message: `Booking ${booking[0].PK} has successfully been canceled. `
       })
     }
-
     return sendResponse(404, {
       success: false,
       message:
