@@ -1,6 +1,5 @@
+import { sendResponse } from "@/utils"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-import { sendResponse } from "../../responses/index.ts"
-import { db } from "../../services/db.ts"
 
 async function findMyBooking(partitionKey, sortKey) {
   const params = {
