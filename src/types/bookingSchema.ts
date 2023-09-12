@@ -25,8 +25,7 @@ export const BookingSchema = z.object({
       required_error: "Number of guests is required.",
       invalid_type_error: "Number of guests must be a number."
     })
-    .min(1)
-    .max(3),
+    .min(1),
   checkInDate: z
     .string({
       required_error: "Check in date is required.",

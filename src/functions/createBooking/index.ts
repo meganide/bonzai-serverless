@@ -1,11 +1,34 @@
 import { errorHandler, zodValidation } from "@/middlewares"
 import { db } from "@/services"
-import { Booking, BookingSchema, EntityTypes } from "@/types"
+import { Booking, BookingSchema, EntityTypes, RoomType } from "@/types"
 import { sendResponse } from "@/utils"
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import { nanoid } from "nanoid"
+
+const roomTypeInfo = {
+  [RoomType.SINGLE]: {
+    maxGuests: 1,
+    pricePerNight: 500
+  },
+  [RoomType.DOUBLE]: {
+    maxGuests: 2,
+    pricePerNight: 1000
+  },
+  [RoomType.SUITE]: {
+    maxGuests: 3,
+    pricePerNight: 1500
+  }
+} as const
+
+function calculateMaxGuestsAllowed(rooms: Pick<Booking, "rooms">["rooms"]) {
+  let maxGuestsAllowed = 0
+  Object.values(RoomType).forEach((roomType) => {
+    maxGuestsAllowed += roomTypeInfo[roomType].maxGuests * rooms[roomType]
+  })
+  return maxGuestsAllowed
+}
 
 async function createBooking(
   event: APIGatewayProxyEvent
@@ -19,6 +42,21 @@ async function createBooking(
   // Compare against
 
   // Get corresponding roomIds from DB and then map those in the batchWrite
+
+  const maxGuestsAllowed = calculateMaxGuestsAllowed(rooms)
+  if (bookingInputs.numberGuests > maxGuestsAllowed) {
+    return sendResponse(400, {
+      success: false,
+      message: `Number of guests (${bookingInputs.numberGuests}) exceeds the maximum number of guests allowed (${maxGuestsAllowed}) in the chosen rooms.`
+    })
+  }
+
+  const numberOfDays = 2
+
+  const totalPrice =
+    rooms.SINGLE * roomTypeInfo[RoomType.SINGLE].pricePerNight * numberOfDays +
+    rooms.DOUBLE * roomTypeInfo[RoomType.DOUBLE].pricePerNight * numberOfDays +
+    rooms.SUITE * roomTypeInfo[RoomType.SUITE].pricePerNight * numberOfDays
 
   const roomId = 3
 
