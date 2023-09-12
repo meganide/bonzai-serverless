@@ -74,12 +74,12 @@ export const handler = async (
 
     if (cancelBooking) {
       await deleteBooking(bookingId)
-
       return sendResponse(200, {
         success: true,
         message: `Booking ${booking[0].PK} has successfully been canceled. `
       })
     }
+
     return sendResponse(404, {
       success: false,
       message:
