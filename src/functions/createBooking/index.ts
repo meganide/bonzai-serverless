@@ -5,6 +5,7 @@ import { sendResponse } from "@/utils"
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
+import dayjs from "dayjs"
 import { nanoid } from "nanoid"
 
 const roomTypeInfo = {
@@ -30,6 +31,22 @@ function calculateMaxGuestsAllowed(rooms: Pick<Booking, "rooms">["rooms"]) {
   return maxGuestsAllowed
 }
 
+function calculateTotalRoomsBooked(rooms: Pick<Booking, "rooms">["rooms"]) {
+  return Object.values(rooms).reduce((total, roomCount) => total + roomCount, 0)
+}
+
+function calculateTotalPrice(
+  totalDaysBooked: number,
+  rooms: Pick<Booking, "rooms">["rooms"]
+) {
+  let totalPrice = 0
+  Object.values(RoomType).forEach((roomType) => {
+    totalPrice +=
+      rooms[roomType] * roomTypeInfo[roomType].pricePerNight * totalDaysBooked
+  })
+  return totalPrice
+}
+
 async function createBooking(
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
@@ -37,11 +54,7 @@ async function createBooking(
   const { rooms, ...bookingInputs } = event.body as unknown as Booking
 
   // --- TODO ---
-  // Get all rooms and check number of guests for each room type.
-  // Calculate the number of allowed guests by the sum of MAX_GUESTS (you get max guests for each room type from the DB) for each room * number of those rooms in booking
-  // Compare against
-
-  // Get corresponding roomIds from DB and then map those in the batchWrite
+  // Get corresponding roomIds for the rooms from DB and then map those in the batchWrite
 
   const maxGuestsAllowed = calculateMaxGuestsAllowed(rooms)
   if (bookingInputs.numberGuests > maxGuestsAllowed) {
@@ -51,14 +64,15 @@ async function createBooking(
     })
   }
 
-  const numberOfDays = 2
+  const totalDaysBooked =
+    dayjs(bookingInputs.checkOutDate).diff(
+      dayjs(bookingInputs.checkInDate),
+      "day"
+    ) + 1
 
-  const totalPrice =
-    rooms.SINGLE * roomTypeInfo[RoomType.SINGLE].pricePerNight * numberOfDays +
-    rooms.DOUBLE * roomTypeInfo[RoomType.DOUBLE].pricePerNight * numberOfDays +
-    rooms.SUITE * roomTypeInfo[RoomType.SUITE].pricePerNight * numberOfDays
+  const totalPrice = calculateTotalPrice(totalDaysBooked, rooms)
 
-  const roomId = 3
+  const roomId = 3 // PLACEHOLDER
 
   try {
     await db
@@ -99,8 +113,8 @@ async function createBooking(
         lastName: bookingInputs.lastName,
         checkInDate: bookingInputs.checkInDate,
         checkOutDate: bookingInputs.checkOutDate,
-        numberRooms: 3,
-        price: 5800
+        numberRooms: calculateTotalRoomsBooked(rooms),
+        price: totalPrice
       }
     })
   } catch (error) {
