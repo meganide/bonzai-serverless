@@ -1,16 +1,15 @@
 import { db } from "@/services"
 import { sendResponse } from "@/utils"
-import { APIGatewayProxyEvent,APIGatewayProxyResult, Context } from "aws-lambda"
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 
-
-async function findMyBooking(partitionKey :number) {
+async function findMyBooking(partitionKey: number | string) {
   const params: any = {
     TableName: "Bonzai",
-    KeyConditionExpression: 'PK = :partitionKey',
-    ExpressionAttributeValues: {':partitionKey': 'b#' + partitionKey}
+    KeyConditionExpression: "PK = :partitionKey",
+    ExpressionAttributeValues: { ":partitionKey": "b#" + partitionKey }
   }
 
-  const {Items} = await db
+  const { Items } = await db
     .query(params, (error, data) => {
       if (error) {
         console.log(error)
@@ -19,23 +18,54 @@ async function findMyBooking(partitionKey :number) {
       }
     })
     .promise()
-return Items
+
+  return Items
 }
 
+function cancelMyBooking(checkInDate: string): boolean {
+  const twoDaysInMilliseconds = 24 * 60 * 60 * 1000 * 2 // 172800000 MS
+  const bookedDateInMilliseconds = new Date(checkInDate).getTime() // booking CheckInDate in MS
+  const now = new Date().getTime() // When request is sent to database, we get the request date in ms
+  const distance = bookedDateInMilliseconds - now
+
+  if (distance >= twoDaysInMilliseconds) {
+    return true
+  } else {
+    return false
+  }
+}
+interface BookingId extends APIGatewayProxyEvent {
+  bookingId: number | string
+}
 
 export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
+  event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const { bookingId } = event.pathParameters
+    const { bookingId } = event.pathParameters as unknown as BookingId
     const booking = await findMyBooking(bookingId)
-    console.log("😀", booking)
-    return sendResponse(200, { booking })
+
+    if (!booking) {
+      throw new Error("No booking found")
+    }
+
+    const cancelBooking = cancelMyBooking(booking[0].CheckInDate)
+
+    if (cancelBooking) {
+      return sendResponse(200, {
+        success: true,
+        message: `Booking ${booking[0].PK} has successfully been canceled. `
+      })
+    }
+    return sendResponse(404, {
+      success: false,
+      message:
+        "Sorry! Check In is in less than 48 hours. It's not possible to cancel this booking"
+    })
   } catch (error) {
     return sendResponse(500, {
       success: false,
-      message: "Something went wrong, could not get any events."
+      message: "Something went wrong. Booking could not be canceled."
     })
   }
 }
