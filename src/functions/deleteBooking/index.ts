@@ -3,7 +3,7 @@ import { sendResponse } from "@/utils"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 
 async function findMyBooking(partitionKey: number | string) {
-  const params: any = {
+  const params = {
     TableName: "Bonzai",
     KeyConditionExpression: "PK = :partitionKey",
     ExpressionAttributeValues: { ":partitionKey": "b#" + partitionKey }
@@ -20,6 +20,23 @@ async function findMyBooking(partitionKey: number | string) {
     .promise()
 
   return Items
+}
+
+async function deleteBooking(partitionKey: number | string) {
+  const params = {
+    TableName: "Bonzai",
+    Key: { PK: "b#" + partitionKey, SK: "b#" + partitionKey }
+  }
+
+  await db
+    .delete(params, (error, data) => {
+      if (error) {
+        console.log(error)
+      } else {
+        console.log(data)
+      }
+    })
+    .promise()
 }
 
 function cancelMyBooking(checkInDate: string): boolean {
@@ -45,27 +62,31 @@ export const handler = async (
     const { bookingId } = event.pathParameters as unknown as BookingId
     const booking = await findMyBooking(bookingId)
 
-    if (!booking) {
+    if (!booking || !booking.length) {
       throw new Error("No booking found")
     }
 
     const cancelBooking = cancelMyBooking(booking[0].CheckInDate)
 
     if (cancelBooking) {
+      await deleteBooking(bookingId)
       return sendResponse(200, {
         success: true,
         message: `Booking ${booking[0].PK} has successfully been canceled. `
       })
     }
+
     return sendResponse(404, {
       success: false,
       message:
         "Sorry! Check In is in less than 48 hours. It's not possible to cancel this booking"
     })
-  } catch (error) {
+  } catch (error: any) {
     return sendResponse(500, {
       success: false,
-      message: "Something went wrong. Booking could not be canceled."
+      message: error.message
+        ? error.message
+        : "Something went wrong. Booking could not be canceled."
     })
   }
 }
