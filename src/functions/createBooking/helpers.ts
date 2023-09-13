@@ -1,3 +1,4 @@
+import { db } from "@/services"
 import { Booking, RoomType, RoomsAmount } from "@/types"
 import { roomTypeInfo } from "@/utils/constants"
 
@@ -20,4 +21,18 @@ export function calculateTotalPrice(totalDays: number, rooms: RoomsAmount) {
       rooms[roomType] * roomTypeInfo[roomType].pricePerNight * totalDays
   })
   return totalPrice
+}
+
+export async function getRooms() {
+  const { Items: rooms } = await db
+    .query({
+      TableName: "Bonzai",
+      IndexName: "GSI1",
+      KeyConditionExpression: "GSI1PK = :pkValue",
+      ExpressionAttributeValues: {
+        ":pkValue": "Room"
+      }
+    })
+    .promise()
+  return rooms
 }

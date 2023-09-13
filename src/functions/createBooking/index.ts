@@ -12,7 +12,8 @@ import { nanoid } from "nanoid"
 import {
   calculateMaxGuestsAllowed,
   calculateTotalPrice,
-  calculateTotalRoomsBooked
+  calculateTotalRoomsBooked,
+  getRooms
 } from "./helpers"
 
 async function createBooking(
@@ -40,51 +41,66 @@ async function createBooking(
 
   const totalPrice = calculateTotalPrice(totalDaysBooked, rooms)
 
+  // Get all Rooms
+  // Filter the rooms according to roomType
+  // Get corresponding room types and correct amount based
+  // Use the room id of the rooms to book said rooms in booking
+
   const roomId = 3 // PLACEHOLDER
 
   try {
-    await db
-      .batchWrite({
-        RequestItems: {
-          Bonzai: [
-            {
-              PutRequest: {
-                Item: {
-                  PK: "b#" + bookingId,
-                  SK: "b#" + bookingId,
-                  EntityType: EntityTypes.BOOKING,
-                  ...bookingInputs
-                }
-              }
-            },
-            {
-              PutRequest: {
-                Item: {
-                  PK: "b#" + bookingId,
-                  SK: "r#" + roomId,
-                  EntityType: EntityTypes.ROOM,
-                  GSI1PK: "r#" + roomId,
-                  GSI1SK: "b#" + bookingId
-                }
-              }
-            }
-          ]
-        }
-      })
-      .promise()
+    const rooms = await getRooms()
 
-    return sendResponse(200, {
-      success: true,
-      booking: {
-        bookingNumber: bookingId,
-        firstName: bookingInputs.firstName,
-        lastName: bookingInputs.lastName,
-        checkInDate: bookingInputs.checkInDate,
-        checkOutDate: bookingInputs.checkOutDate,
-        numberRooms: calculateTotalRoomsBooked(rooms),
-        price: totalPrice
-      }
-    })
+    if (!rooms) {
+      return sendResponse(404, {
+        success: false,
+        message: "Could not find any rooms."
+      })
+    }
+    console.log(rooms)
+
+    // await db
+    //   .batchWrite({
+    //     RequestItems: {
+    //       Bonzai: [
+    //         {
+    //           PutRequest: {
+    //             Item: {
+    //               PK: "b#" + bookingId,
+    //               SK: "b#" + bookingId,
+    //               EntityType: EntityTypes.BOOKING,
+    //               ...bookingInputs
+    //             }
+    //           }
+    //         },
+    //         {
+    //           PutRequest: {
+    //             Item: {
+    //               PK: "b#" + bookingId,
+    //               SK: "r#" + roomId,
+    //               EntityType: EntityTypes.ROOM,
+    //               GSI1PK: "r#" + roomId,
+    //               GSI1SK: "b#" + bookingId
+    //             }
+    //           }
+    //         }
+    //       ]
+    //     }
+    //   })
+    //   .promise()
+
+    // return sendResponse(200, {
+    //   success: true,
+    //   booking: {
+    //     bookingNumber: bookingId,
+    //     firstName: bookingInputs.firstName,
+    //     lastName: bookingInputs.lastName,
+    //     checkInDate: bookingInputs.checkInDate,
+    //     checkOutDate: bookingInputs.checkOutDate,
+    //     numberRooms: calculateTotalRoomsBooked(rooms),
+    //     price: totalPrice
+    //   }
+    // })
   } catch (error) {
     console.log(error)
     return sendResponse(500, {
