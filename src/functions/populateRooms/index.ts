@@ -1,5 +1,5 @@
 import { db } from "@/services"
-import { RoomItem, RoomType } from "@/types"
+import { EntityTypes, RoomItem, RoomType } from "@/types"
 import { sendResponse } from "@/utils"
 import {
   APIGatewayProxyEvent,
@@ -32,7 +32,9 @@ for (let i = 0; i < 20; i++) {
             Item: {
               PK: `r#${i + 1}`,
               SK: `r#${i + 1}`,
-              EntityType: "Room",
+              GSI1PK: EntityTypes.ROOM,
+              GSI1SK: roomType,
+              EntityType: EntityTypes.ROOM,
               Type: roomType,
               MaxGuests:
                 roomType === RoomType.SINGLE
