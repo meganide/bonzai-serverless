@@ -1,5 +1,8 @@
 import { sendResponse } from "@/utils"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
+import { DocumentClient } from "aws-sdk/clients/dynamodb"
+
+import { db } from "../../services/db.ts"
 
 export const handler = async (
   event: APIGatewayProxyEvent,
