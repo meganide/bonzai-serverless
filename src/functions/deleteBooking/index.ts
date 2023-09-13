@@ -1,6 +1,9 @@
 import { db } from "@/services"
 import { sendResponse } from "@/utils"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
+import { DocumentClient } from "aws-sdk/clients/dynamodb"
+
+import { db } from "../../services/db.ts"
 
 async function findMyBooking(partitionKey: number | string) {
   const params = {
