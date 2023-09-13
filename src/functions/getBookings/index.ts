@@ -1,16 +1,40 @@
+import { db } from "@/services"
 import { sendResponse } from "@/utils"
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
+import {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context
+} from "aws-lambda"
+import { AWSError } from "aws-sdk/lib/error"
 
 export const handler = async (
   event: APIGatewayProxyEvent,
-  context: APIGatewayProxyResult
-) => {
+  context: Context
+): Promise<APIGatewayProxyResult> => {
   try {
-    return sendResponse(200, { test: "hej" })
+    const { Items: allBookings } = await db
+      .scan({
+        TableName: "Bonzai",
+        FilterExpression: "begins_with(PK, :pk)",
+        ExpressionAttributeValues: {
+          ":pk": "b"
+        }
+      })
+      .promise()
+
+    return sendResponse(200, { sucess: true, allBookings })
   } catch (error) {
-    return sendResponse(500, {
+    console.log(error)
+    if (error instanceof Error) {
+      return sendResponse(500, {
+        success: false,
+        message: error.message
+      })
+    }
+    const awsError = error as AWSError
+    return sendResponse(awsError.statusCode ?? 500, {
       success: false,
-      message: "Something went wrong, could not get any events."
+      message: awsError.message
     })
   }
 }
