@@ -66,9 +66,9 @@ export const handler = async (
       await db.batchWrite(params).promise()
     }
 
-    return sendResponse(200, { test: "hej" })
+    return sendResponse(200, { sucess: true })
   } catch (error) {
-    console.log("hej", error)
+    console.log(error)
     if (error instanceof Error) {
       return sendResponse(500, {
         success: false,
