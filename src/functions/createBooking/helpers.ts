@@ -8,7 +8,6 @@ import {
   RoomType
 } from "@/types"
 import { roomTypeInfo } from "@/utils/constants"
-import { DocumentClient } from "aws-sdk/clients/dynamodb"
 
 export function calculateMaxGuestsAllowed(rooms: NumberOfRooms) {
   let maxGuestsAllowed = 0

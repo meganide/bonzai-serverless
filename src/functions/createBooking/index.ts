@@ -1,6 +1,5 @@
 import { errorHandler, zodValidation } from "@/middlewares"
-import { db } from "@/services"
-import { Booking, BookingSchema, EntityTypes, RoomItem } from "@/types"
+import { Booking, BookingSchema, RoomItem } from "@/types"
 import { sendResponse } from "@/utils"
 import { getDaysBetween } from "@/utils/date"
 import middy from "@middy/core"
