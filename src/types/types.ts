@@ -17,3 +17,9 @@ export interface RoomItem {
   MaxGuests: number
   PricePerNight: number
 }
+
+export type RoomItemTypes = {
+  [RoomType.SINGLE]: RoomItem[]
+  [RoomType.DOUBLE]: RoomItem[]
+  [RoomType.SUITE]: RoomItem[]
+}

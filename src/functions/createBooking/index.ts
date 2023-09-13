@@ -1,6 +1,6 @@
 import { errorHandler, zodValidation } from "@/middlewares"
 import { db } from "@/services"
-import { Booking, BookingSchema, EntityTypes } from "@/types"
+import { Booking, BookingSchema, EntityTypes, RoomItem } from "@/types"
 import { sendResponse } from "@/utils"
 import { getDaysBetween } from "@/utils/date"
 import middy from "@middy/core"
@@ -13,6 +13,8 @@ import {
   calculateMaxGuestsAllowed,
   calculateTotalPrice,
   calculateTotalRoomsBooked,
+  filterAllRoomTypes,
+  getAvailableRoomIds,
   getRooms
 } from "./helpers"
 
@@ -20,12 +22,13 @@ async function createBooking(
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
   const bookingId = nanoid()
-  const { rooms, ...bookingInputs } = event.body as unknown as Booking
+  const { rooms: numberOfRooms, ...bookingInputs } =
+    event.body as unknown as Booking
 
   // --- TODO ---
   // Get corresponding roomIds for the rooms from DB and then map those in the batchWrite
 
-  const maxGuestsAllowed = calculateMaxGuestsAllowed(rooms)
+  const maxGuestsAllowed = calculateMaxGuestsAllowed(numberOfRooms)
   if (bookingInputs.numberGuests > maxGuestsAllowed) {
     return sendResponse(400, {
       success: false,
@@ -39,7 +42,7 @@ async function createBooking(
       dayjs(bookingInputs.checkInDate)
     ) + 1
 
-  const totalPrice = calculateTotalPrice(totalDaysBooked, rooms)
+  const totalPrice = calculateTotalPrice(totalDaysBooked, numberOfRooms)
 
   // Get all Rooms
   // Filter the rooms according to roomType
@@ -49,15 +52,47 @@ async function createBooking(
   const roomId = 3 // PLACEHOLDER
 
   try {
-    const rooms = await getRooms()
+    const availableRooms = (await getRooms()) as unknown as
+      | RoomItem[]
+      | undefined
 
-    if (!rooms) {
+    if (!availableRooms || availableRooms?.length == 0) {
       return sendResponse(404, {
         success: false,
         message: "Could not find any rooms."
       })
     }
-    console.log(rooms)
+
+    const totalRoomsBooked = calculateTotalRoomsBooked(numberOfRooms)
+    const filteredRoomByType = filterAllRoomTypes(availableRooms)
+    const {
+      SINGLE: singleRooms,
+      DOUBLE: doubleRooms,
+      SUITE: suiteRooms
+    } = filteredRoomByType
+
+    if (
+      numberOfRooms.SINGLE > singleRooms.length ||
+      numberOfRooms.DOUBLE > doubleRooms.length ||
+      numberOfRooms.SUITE > suiteRooms.length
+    ) {
+      return sendResponse(400, {
+        success: false,
+        message: "Can't book more rooms than the available amount."
+      })
+    }
+
+    const availableRoomIds = getAvailableRoomIds(
+      filteredRoomByType,
+      numberOfRooms
+    )
+
+    return sendResponse(200, {
+      singleRooms,
+      doubleRooms,
+      suiteRooms,
+      availableRoomIds
+    })
 
     // await db
     //   .batchWrite({
@@ -97,7 +132,7 @@ async function createBooking(
     //     lastName: bookingInputs.lastName,
     //     checkInDate: bookingInputs.checkInDate,
     //     checkOutDate: bookingInputs.checkOutDate,
-    //     numberRooms: calculateTotalRoomsBooked(rooms),
+    //     numberRooms: totalRoomsBooked,
     //     price: totalPrice
     //   }
     // })

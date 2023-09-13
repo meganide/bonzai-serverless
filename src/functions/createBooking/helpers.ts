@@ -1,8 +1,8 @@
 import { db } from "@/services"
-import { Booking, RoomType, RoomsAmount } from "@/types"
+import { NumberOfRooms, RoomItem, RoomItemTypes, RoomType } from "@/types"
 import { roomTypeInfo } from "@/utils/constants"
 
-export function calculateMaxGuestsAllowed(rooms: RoomsAmount) {
+export function calculateMaxGuestsAllowed(rooms: NumberOfRooms) {
   let maxGuestsAllowed = 0
   Object.values(RoomType).forEach((roomType) => {
     maxGuestsAllowed += roomTypeInfo[roomType].maxGuests * rooms[roomType]
@@ -10,16 +10,17 @@ export function calculateMaxGuestsAllowed(rooms: RoomsAmount) {
   return maxGuestsAllowed
 }
 
-export function calculateTotalRoomsBooked(rooms: RoomsAmount) {
+export function calculateTotalRoomsBooked(rooms: NumberOfRooms) {
   return Object.values(rooms).reduce((total, roomCount) => total + roomCount, 0)
 }
 
-export function calculateTotalPrice(totalDays: number, rooms: RoomsAmount) {
+export function calculateTotalPrice(totalDays: number, rooms: NumberOfRooms) {
   let totalPrice = 0
   Object.values(RoomType).forEach((roomType) => {
     totalPrice +=
       rooms[roomType] * roomTypeInfo[roomType].pricePerNight * totalDays
   })
+
   return totalPrice
 }
 
@@ -34,5 +35,35 @@ export async function getRooms() {
       }
     })
     .promise()
+
   return rooms
+}
+
+export function filterRoomsByType(rooms: RoomItem[], type: RoomType) {
+  return rooms.filter((room) => room.Type === type)
+}
+
+export function filterAllRoomTypes(rooms: RoomItem[]) {
+  return {
+    [RoomType.SINGLE]: filterRoomsByType(rooms, RoomType.SINGLE),
+    [RoomType.DOUBLE]: filterRoomsByType(rooms, RoomType.DOUBLE),
+    [RoomType.SUITE]: filterRoomsByType(rooms, RoomType.SUITE)
+  }
+}
+
+export function getAvailableRoomIds(
+  rooms: RoomItemTypes,
+  numberOfRooms: NumberOfRooms
+) {
+  const availableRoomIds: string[] = []
+  const roomsCopy = structuredClone(rooms)
+  for (const [roomType, amountRooms] of Object.entries(numberOfRooms)) {
+    for (let i = 0; i < amountRooms; i++) {
+      const room = roomsCopy[roomType as RoomType].pop()
+      if (room) {
+        availableRoomIds.push(room.PK)
+      }
+    }
+  }
+  return availableRoomIds
 }
