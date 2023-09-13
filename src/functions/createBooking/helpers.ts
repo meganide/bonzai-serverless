@@ -2,14 +2,14 @@ import { db } from "@/services"
 import {
   Booking,
   EntityTypes,
-  NumberOfRooms,
+  NumberOfRoomTypes,
   RoomItem,
   RoomItemTypes,
   RoomType
 } from "@/types"
 import { roomTypeInfo } from "@/utils/constants"
 
-export function calculateMaxGuestsAllowed(rooms: NumberOfRooms) {
+export function calculateMaxGuestsAllowed(rooms: NumberOfRoomTypes) {
   let maxGuestsAllowed = 0
   Object.values(RoomType).forEach((roomType) => {
     maxGuestsAllowed += roomTypeInfo[roomType].maxGuests * rooms[roomType]
@@ -17,11 +17,14 @@ export function calculateMaxGuestsAllowed(rooms: NumberOfRooms) {
   return maxGuestsAllowed
 }
 
-export function calculateTotalRoomsBooked(rooms: NumberOfRooms) {
+export function calculateTotalRoomsBooked(rooms: NumberOfRoomTypes) {
   return Object.values(rooms).reduce((total, roomCount) => total + roomCount, 0)
 }
 
-export function calculateTotalPrice(totalDays: number, rooms: NumberOfRooms) {
+export function calculateTotalPrice(
+  totalDays: number,
+  rooms: NumberOfRoomTypes
+) {
   let totalPrice = 0
   Object.values(RoomType).forEach((roomType) => {
     totalPrice +=
@@ -60,17 +63,13 @@ export function filterAllRoomTypes(rooms: RoomItem[]) {
 
 export function getAvailableRoomIds(
   rooms: RoomItemTypes,
-  numberOfRooms: NumberOfRooms
+  numberOfRooms: NumberOfRoomTypes
 ) {
   const availableRoomIds: string[] = []
   const roomsCopy = structuredClone(rooms)
   for (const [roomType, amountRooms] of Object.entries(numberOfRooms)) {
-    for (let i = 0; i < amountRooms; i++) {
-      const room = roomsCopy[roomType as RoomType].pop()
-      if (room) {
-        availableRoomIds.push(room.PK)
-      }
-    }
+    const rooms = roomsCopy[roomType as RoomType].splice(0, amountRooms)
+    availableRoomIds.push(...rooms.map((room) => room.PK))
   }
   return availableRoomIds
 }
