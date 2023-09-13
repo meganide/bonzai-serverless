@@ -76,3 +76,4 @@ const BookingWithIdSchema = BookingSchema.merge(HasId)
 
 export type Booking = Required<z.infer<typeof BookingSchema>>
 export type BookingWithId = Required<z.infer<typeof BookingWithIdSchema>>
+export type RoomsAmount = Pick<Booking, "rooms">["rooms"]

@@ -1,51 +1,19 @@
 import { errorHandler, zodValidation } from "@/middlewares"
 import { db } from "@/services"
-import { Booking, BookingSchema, EntityTypes, RoomType } from "@/types"
+import { Booking, BookingSchema, EntityTypes } from "@/types"
 import { sendResponse } from "@/utils"
+import { getDaysBetween } from "@/utils/date"
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import dayjs from "dayjs"
 import { nanoid } from "nanoid"
 
-const roomTypeInfo = {
-  [RoomType.SINGLE]: {
-    maxGuests: 1,
-    pricePerNight: 500
-  },
-  [RoomType.DOUBLE]: {
-    maxGuests: 2,
-    pricePerNight: 1000
-  },
-  [RoomType.SUITE]: {
-    maxGuests: 3,
-    pricePerNight: 1500
-  }
-} as const
-
-function calculateMaxGuestsAllowed(rooms: Pick<Booking, "rooms">["rooms"]) {
-  let maxGuestsAllowed = 0
-  Object.values(RoomType).forEach((roomType) => {
-    maxGuestsAllowed += roomTypeInfo[roomType].maxGuests * rooms[roomType]
-  })
-  return maxGuestsAllowed
-}
-
-function calculateTotalRoomsBooked(rooms: Pick<Booking, "rooms">["rooms"]) {
-  return Object.values(rooms).reduce((total, roomCount) => total + roomCount, 0)
-}
-
-function calculateTotalPrice(
-  totalDaysBooked: number,
-  rooms: Pick<Booking, "rooms">["rooms"]
-) {
-  let totalPrice = 0
-  Object.values(RoomType).forEach((roomType) => {
-    totalPrice +=
-      rooms[roomType] * roomTypeInfo[roomType].pricePerNight * totalDaysBooked
-  })
-  return totalPrice
-}
+import {
+  calculateMaxGuestsAllowed,
+  calculateTotalPrice,
+  calculateTotalRoomsBooked
+} from "./helpers"
 
 async function createBooking(
   event: APIGatewayProxyEvent
@@ -65,9 +33,9 @@ async function createBooking(
   }
 
   const totalDaysBooked =
-    dayjs(bookingInputs.checkOutDate).diff(
-      dayjs(bookingInputs.checkInDate),
-      "day"
+    getDaysBetween(
+      dayjs(bookingInputs.checkOutDate),
+      dayjs(bookingInputs.checkInDate)
     ) + 1
 
   const totalPrice = calculateTotalPrice(totalDaysBooked, rooms)
