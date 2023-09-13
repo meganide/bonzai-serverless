@@ -13,6 +13,7 @@ import {
   calculateMaxGuestsAllowed,
   calculateTotalPrice,
   calculateTotalRoomsBooked,
+  createBookingItems,
   filterAllRoomTypes,
   getAvailableRoomIds,
   getRooms
@@ -21,12 +22,9 @@ import {
 async function createBooking(
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-  const bookingId = nanoid()
+  const bookingId = "b#" + nanoid()
   const { rooms: numberOfRooms, ...bookingInputs } =
     event.body as unknown as Booking
-
-  // --- TODO ---
-  // Get corresponding roomIds for the rooms from DB and then map those in the batchWrite
 
   const maxGuestsAllowed = calculateMaxGuestsAllowed(numberOfRooms)
   if (bookingInputs.numberGuests > maxGuestsAllowed) {
@@ -44,13 +42,6 @@ async function createBooking(
 
   const totalPrice = calculateTotalPrice(totalDaysBooked, numberOfRooms)
 
-  // Get all Rooms
-  // Filter the rooms according to roomType
-  // Get corresponding room types and correct amount based
-  // Use the room id of the rooms to book said rooms in booking
-
-  const roomId = 3 // PLACEHOLDER
-
   try {
     const availableRooms = (await getRooms()) as unknown as
       | RoomItem[]
@@ -64,12 +55,12 @@ async function createBooking(
     }
 
     const totalRoomsBooked = calculateTotalRoomsBooked(numberOfRooms)
-    const filteredRoomByType = filterAllRoomTypes(availableRooms)
+    const filteredRoomsByType = filterAllRoomTypes(availableRooms)
     const {
       SINGLE: singleRooms,
       DOUBLE: doubleRooms,
       SUITE: suiteRooms
-    } = filteredRoomByType
+    } = filteredRoomsByType
 
     if (
       numberOfRooms.SINGLE > singleRooms.length ||
@@ -83,59 +74,24 @@ async function createBooking(
     }
 
     const availableRoomIds = getAvailableRoomIds(
-      filteredRoomByType,
+      filteredRoomsByType,
       numberOfRooms
     )
 
+    await createBookingItems(bookingId, bookingInputs, availableRoomIds)
+
     return sendResponse(200, {
-      singleRooms,
-      doubleRooms,
-      suiteRooms,
-      availableRoomIds
+      success: true,
+      booking: {
+        bookingNumber: bookingId,
+        firstName: bookingInputs.firstName,
+        lastName: bookingInputs.lastName,
+        checkInDate: bookingInputs.checkInDate,
+        checkOutDate: bookingInputs.checkOutDate,
+        numberRooms: totalRoomsBooked,
+        price: totalPrice
+      }
     })
-
-    // await db
-    //   .batchWrite({
-    //     RequestItems: {
-    //       Bonzai: [
-    //         {
-    //           PutRequest: {
-    //             Item: {
-    //               PK: "b#" + bookingId,
-    //               SK: "b#" + bookingId,
-    //               EntityType: EntityTypes.BOOKING,
-    //               ...bookingInputs
-    //             }
-    //           }
-    //         },
-    //         {
-    //           PutRequest: {
-    //             Item: {
-    //               PK: "b#" + bookingId,
-    //               SK: "r#" + roomId,
-    //               EntityType: EntityTypes.ROOM,
-    //               GSI1PK: "r#" + roomId,
-    //               GSI1SK: "b#" + bookingId
-    //             }
-    //           }
-    //         }
-    //       ]
-    //     }
-    //   })
-    //   .promise()
-
-    // return sendResponse(200, {
-    //   success: true,
-    //   booking: {
-    //     bookingNumber: bookingId,
-    //     firstName: bookingInputs.firstName,
-    //     lastName: bookingInputs.lastName,
-    //     checkInDate: bookingInputs.checkInDate,
-    //     checkOutDate: bookingInputs.checkOutDate,
-    //     numberRooms: totalRoomsBooked,
-    //     price: totalPrice
-    //   }
-    // })
   } catch (error) {
     console.log(error)
     return sendResponse(500, {

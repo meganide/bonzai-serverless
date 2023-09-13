@@ -1,6 +1,14 @@
 import { db } from "@/services"
-import { NumberOfRooms, RoomItem, RoomItemTypes, RoomType } from "@/types"
+import {
+  Booking,
+  EntityTypes,
+  NumberOfRooms,
+  RoomItem,
+  RoomItemTypes,
+  RoomType
+} from "@/types"
 import { roomTypeInfo } from "@/utils/constants"
+import { DocumentClient } from "aws-sdk/clients/dynamodb"
 
 export function calculateMaxGuestsAllowed(rooms: NumberOfRooms) {
   let maxGuestsAllowed = 0
@@ -66,4 +74,41 @@ export function getAvailableRoomIds(
     }
   }
   return availableRoomIds
+}
+
+export async function createBookingItems(
+  bookingId: string,
+  bookingInputs: Omit<Booking, "rooms">,
+  availableRoomIds: string[]
+) {
+  const bookingItems = availableRoomIds.map((roomId) => ({
+    PutRequest: {
+      Item: {
+        PK: bookingId,
+        SK: roomId,
+        EntityType: EntityTypes.ROOM,
+        GSI1PK: roomId,
+        GSI1SK: bookingId
+      }
+    }
+  }))
+
+  bookingItems.unshift({
+    PutRequest: {
+      Item: {
+        PK: bookingId,
+        SK: bookingId,
+        EntityType: EntityTypes.BOOKING,
+        ...bookingInputs
+      } as any
+    }
+  })
+
+  await db
+    .batchWrite({
+      RequestItems: {
+        Bonzai: bookingItems
+      }
+    })
+    .promise()
 }
