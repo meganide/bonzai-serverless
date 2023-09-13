@@ -28,23 +28,23 @@ async function updateMyBooking(
 }
 
 export const handler = async (event: APIGatewayProxyEvent) => {
-  const body = JSON.parse(event.body)
-  console.log(body)
-  let exp = {
-    UpdateExpression: "SET ",
-    ExpressionAttributeNames: {},
-    ExpressionAttributeValues: {}
-  }
-  for (const [key, value] of Object.entries(body)) {
-    // console.log(key, value)
-    // console.log((exp.UpdateExpression += `#${key} = :${key},`))
-    exp.UpdateExpression += `#${key} = :${key},`
-    exp.ExpressionAttributeNames[`#${key}`] = key
-    exp.ExpressionAttributeValues[`:${key}`] = value
-  }
-  exp.UpdateExpression = exp.UpdateExpression.slice(0, -1)
-  console.log(exp)
-  return exp
+  // const body = JSON.parse(event.body)
+  // console.log(body)
+  // let exp = {
+  //   UpdateExpression: "SET ",
+  //   ExpressionAttributeNames: {},
+  //   ExpressionAttributeValues: {}
+  // }
+  // // for (const [key, value] of Object.entries(body)) {
+  //   // console.log(key, value)
+  //   // console.log((exp.UpdateExpression += `#${key} = :${key},`))
+  //   // exp.UpdateExpression += `#${key} = :${key},`
+  //   // exp.ExpressionAttributeNames[`#${key}`] = key
+  //   // exp.ExpressionAttributeValues[`:${key}`] = value
+  // }
+  // exp.UpdateExpression = exp.UpdateExpression.slice(0, -1)
+  // console.log(exp)
+  // return exp
   try {
     return sendResponse(200, { test: "hej" })
   } catch (error) {
