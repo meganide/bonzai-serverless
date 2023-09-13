@@ -54,12 +54,12 @@ async function createBooking(
     }
 
     const totalRoomsBooked = calculateTotalRoomsBooked(numberOfRooms)
-    const filteredRoomsByType = filterAllRoomTypes(availableRooms)
+    const roomsByType = filterAllRoomTypes(availableRooms)
     const {
       SINGLE: singleRooms,
       DOUBLE: doubleRooms,
       SUITE: suiteRooms
-    } = filteredRoomsByType
+    } = roomsByType
 
     if (
       numberOfRooms.SINGLE > singleRooms.length ||
@@ -72,10 +72,7 @@ async function createBooking(
       })
     }
 
-    const availableRoomIds = getAvailableRoomIds(
-      filteredRoomsByType,
-      numberOfRooms
-    )
+    const availableRoomIds = getAvailableRoomIds(roomsByType, numberOfRooms)
 
     await createBookingItems(bookingId, bookingInputs, availableRoomIds)
 
