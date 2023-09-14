@@ -10,9 +10,10 @@ export async function getBookingById(bookingId: string) {
     ExpressionAttributeValues: { ":partitionKey": "b#" + bookingId }
   }
 
-  const { Items, Count } = await db.query(params).promise()
+  const booking = await db.query(params).promise()
+  const { Count, Items } = booking
 
-  if (Count === 0) {
+  if (!booking || !Items || Count === 0) {
     throw new createHttpError.NotFound(
       `Booking with the specified id ${bookingId} could not be found`
     )
