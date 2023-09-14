@@ -1,37 +1,14 @@
 import { db } from "@/services"
-import { UpdateBookingBody } from "@/types/updateBookingSchema"
-import { sendResponse } from "@/utils"
-import { ExpressionAttributeNameMap } from "aws-sdk/clients/dynamodb"
+import { Booking } from "@/types"
+import {
+  DocumentClient,
+  ExpressionAttributeNameMap
+} from "aws-sdk/clients/dynamodb"
 
 type Expression = {
   UpdateExpression: string
   ExpressionAttributeNames: ExpressionAttributeNameMap
   ExpressionAttributeValues: { [key: string]: any }
-}
-
-function createExpression(
-  body:
-    | Omit<UpdateBookingBody, "rooms">
-    | Pick<UpdateBookingBody, "rooms">["rooms"]
-) {
-  let expression: Expression = {
-    UpdateExpression: "SET",
-    ExpressionAttributeNames: {},
-    ExpressionAttributeValues: {}
-  }
-
-  for (const [key, value] of Object.entries(body!)) {
-    expression.UpdateExpression += ` #${key} = :${key},`
-    expression.ExpressionAttributeNames[`#${key}`] = key
-    expression.ExpressionAttributeValues[`:${key}`] = value
-    if (key === "checkInDate") {
-      expression.UpdateExpression += ` #GSI1SK = :skValue,`
-      expression.ExpressionAttributeNames[`#GSI1SK`] = "GSI1SK"
-      expression.ExpressionAttributeValues[`:skValue`] = value
-    }
-  }
-  expression.UpdateExpression = expression.UpdateExpression.slice(0, -1) // remove ',' from last key value string
-  return expression
 }
 
 export async function getBookingById(bookingId: string) {
@@ -46,14 +23,18 @@ export async function getBookingById(bookingId: string) {
   return Items
 }
 
+// async function getRoomIds(rooms) {
+
+// }
+
 export async function updateBookingItem(
-  booking: Record<string, string>[],
-  updateBookingBody: UpdateBookingBody
+  booking: DocumentClient.ItemList,
+  bookingInputs: Booking
 ) {
-  const { rooms, ...rest } = updateBookingBody
-  const bookingId = booking[0].PK
-  const bookingUpdateExpression = createExpression(rest)
-  const roomUpdateExpression = createExpression(rooms)
+  const { PK: bookingId, rooms } = booking[0]
+  const { numberGuests, checkInDate, checkOutDate } = bookingInputs
+
+  //   const roomIds = getRoomIds(rooms)
 
   await db
     .transactWrite({
@@ -62,13 +43,27 @@ export async function updateBookingItem(
           Update: {
             TableName: "Bonzai",
             Key: { PK: bookingId, SK: bookingId },
-            UpdateExpression: bookingUpdateExpression.UpdateExpression,
-            ExpressionAttributeNames:
-              bookingUpdateExpression.ExpressionAttributeNames,
-            ExpressionAttributeValues:
-              bookingUpdateExpression.ExpressionAttributeValues
+            UpdateExpression:
+              "SET numberGuests = :numberGuests, checkInDate = :checkInDate, checkOutDate = :checkOutDate, GSI1SK = :GSI1SK",
+            ExpressionAttributeValues: {
+              ":numberGuests": numberGuests,
+              ":checkInDate": checkInDate,
+              ":checkOutDate": checkOutDate,
+              ":GSI1SK": checkInDate
+            },
+            ConditionExpression: "attribute_exists(PK)"
           }
         }
+        // {
+        //   Delete: {
+        //     TableName: "Bonzai",
+        //     Key: { PK: "b#" + bookingId },
+        //     ConditionExpression: "begins_with(SK, :prefix)",
+        //     ExpressionAttributeValues: {
+        //       ":prefix": "r#"
+        //     }
+        //   }
+        // }
         // {
         //   Update: {
         //     TableName: "Bonzai",

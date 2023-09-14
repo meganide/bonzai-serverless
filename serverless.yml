@@ -41,7 +41,7 @@ functions:
     events:
       - httpApi:
           path: "/api/bookings/{bookingId}"
-          method: PATCH
+          method: PUT
   deleteBooking:
     handler: src/functions/deleteBooking/index.handler
     events:
