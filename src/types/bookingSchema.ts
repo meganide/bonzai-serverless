@@ -1,4 +1,5 @@
 import { RoomType } from "@/types"
+import { isValidDateFormat } from "@/utils"
 import z from "zod"
 
 export const BookingSchema = z.object({
@@ -65,11 +66,6 @@ export const BookingSchema = z.object({
       message: "Rooms is required."
     })
 })
-
-function isValidDateFormat(input: string): boolean {
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/ // YYYY-MM-DD format
-  return dateRegex.test(input)
-}
 
 const HasId = z.object({ id: z.string().min(1) })
 const BookingWithIdSchema = BookingSchema.merge(HasId)
