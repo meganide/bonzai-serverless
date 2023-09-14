@@ -86,7 +86,7 @@ export function getAvailableRoomIds(
   return availableRoomIds
 }
 
-export async function createBookingItems(
+function createBookingItemExpressions(
   bookingId: string,
   bookingInputs: Omit<Booking, "rooms">,
   availableRoomIds: string[]
@@ -116,10 +116,24 @@ export async function createBookingItems(
     }
   })
 
+  return bookingItems
+}
+
+export async function createBookingItems(
+  bookingId: string,
+  bookingInputs: Omit<Booking, "rooms">,
+  availableRoomIds: string[]
+) {
+  const bookingItemExpressions = createBookingItemExpressions(
+    bookingId,
+    bookingInputs,
+    availableRoomIds
+  )
+
   await db
     .batchWrite({
       RequestItems: {
-        Bonzai: bookingItems
+        Bonzai: bookingItemExpressions
       }
     })
     .promise()
