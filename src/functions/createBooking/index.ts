@@ -1,4 +1,5 @@
 import { errorHandler, zodValidation } from "@/middlewares"
+import { maxGuestsAllowedValidator } from "@/middlewares/maxGuestsAllowedValidator"
 import { Booking, BookingSchema, RoomItem } from "@/types"
 import { sendResponse } from "@/utils"
 import { getDaysBetween } from "@/utils"
@@ -6,10 +7,10 @@ import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
 import dayjs from "dayjs"
+import { HttpError } from "http-errors"
 import { nanoid } from "nanoid"
 
 import {
-  calculateMaxGuestsAllowed,
   calculateTotalPrice,
   calculateTotalRoomsBooked,
   createBookingItems,
@@ -24,14 +25,7 @@ async function createBooking(
   const bookingId = nanoid()
   const { rooms: numberOfRooms, ...bookingInputs } =
     event.body as unknown as Booking
-
-  const maxGuestsAllowed = calculateMaxGuestsAllowed(numberOfRooms)
-  if (bookingInputs.numberGuests > maxGuestsAllowed) {
-    return sendResponse(400, {
-      success: false,
-      message: `Number of guests (${bookingInputs.numberGuests}) exceeds the maximum number of guests allowed (${maxGuestsAllowed}) in the chosen rooms.`
-    })
-  }
+  const { email, numberGuests, ...bookingResponse } = bookingInputs
 
   const totalDaysBooked =
     getDaysBetween(
@@ -39,57 +33,29 @@ async function createBooking(
       dayjs(bookingInputs.checkInDate)
     ) + 1
 
-  const totalPrice = calculateTotalPrice(totalDaysBooked, numberOfRooms)
-
   try {
-    const availableRooms = (await getRooms()) as unknown as
-      | RoomItem[]
-      | undefined
-
-    if (!availableRooms || availableRooms?.length == 0) {
-      return sendResponse(404, {
-        success: false,
-        message: "Could not find any rooms."
-      })
-    }
-
-    const totalRoomsBooked = calculateTotalRoomsBooked(numberOfRooms)
-    const roomsByType = filterAllRoomTypes(availableRooms)
-    const {
-      SINGLE: singleRooms,
-      DOUBLE: doubleRooms,
-      SUITE: suiteRooms
-    } = roomsByType
-
-    if (
-      numberOfRooms.SINGLE > singleRooms.length ||
-      numberOfRooms.DOUBLE > doubleRooms.length ||
-      numberOfRooms.SUITE > suiteRooms.length
-    ) {
-      return sendResponse(400, {
-        success: false,
-        message: "Can't book more rooms than the available amount."
-      })
-    }
-
+    const availableRooms = (await getRooms()) as unknown as RoomItem[]
+    const roomsByType = filterAllRoomTypes(availableRooms, numberOfRooms)
     const availableRoomIds = getAvailableRoomIds(roomsByType, numberOfRooms)
-
     await createBookingItems(bookingId, bookingInputs, availableRoomIds)
 
     return sendResponse(200, {
       success: true,
       booking: {
         bookingNumber: bookingId,
-        firstName: bookingInputs.firstName,
-        lastName: bookingInputs.lastName,
-        checkInDate: bookingInputs.checkInDate,
-        checkOutDate: bookingInputs.checkOutDate,
-        numberRooms: totalRoomsBooked,
-        price: totalPrice
+        ...bookingResponse,
+        numberRooms: calculateTotalRoomsBooked(numberOfRooms),
+        price: calculateTotalPrice(totalDaysBooked, numberOfRooms)
       }
     })
   } catch (error) {
     console.log(error)
+    if (error instanceof HttpError) {
+      return sendResponse(error.statusCode, {
+        success: false,
+        message: error.message
+      })
+    }
     return sendResponse(500, {
       success: false,
       message: "Something went wrong, could not create a booking."
@@ -100,5 +66,6 @@ async function createBooking(
 export const handler = middy(createBooking)
   .use(jsonBodyParser())
   .use(zodValidation(BookingSchema))
+  .use(maxGuestsAllowedValidator())
   .use(errorHandler())
   .handler(createBooking)
