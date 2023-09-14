@@ -1,57 +1,80 @@
 import { errorHandler, zodValidation } from "@/middlewares"
-import { db } from "@/services"
-import { Booking, BookingSchema, EntityTypes } from "@/types"
+import { Booking, BookingSchema, RoomItem } from "@/types"
 import { sendResponse } from "@/utils"
+import { getDaysBetween } from "@/utils/date"
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
+import dayjs from "dayjs"
 import { nanoid } from "nanoid"
+
+import {
+  calculateMaxGuestsAllowed,
+  calculateTotalPrice,
+  calculateTotalRoomsBooked,
+  createBookingItems,
+  filterAllRoomTypes,
+  getAvailableRoomIds,
+  getRooms
+} from "./helpers"
 
 async function createBooking(
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-  const bookingId = nanoid()
-  const { rooms, ...bookingInputs } = event.body as unknown as Booking
+  const bookingId = "b#" + nanoid()
+  const { rooms: numberOfRooms, ...bookingInputs } =
+    event.body as unknown as Booking
 
-  // --- TODO ---
-  // Get all rooms and check number of guests for each room type.
-  // Calculate the number of allowed guests by the sum of MAX_GUESTS (you get max guests for each room type from the DB) for each room * number of those rooms in booking
-  // Compare against
+  const maxGuestsAllowed = calculateMaxGuestsAllowed(numberOfRooms)
+  if (bookingInputs.numberGuests > maxGuestsAllowed) {
+    return sendResponse(400, {
+      success: false,
+      message: `Number of guests (${bookingInputs.numberGuests}) exceeds the maximum number of guests allowed (${maxGuestsAllowed}) in the chosen rooms.`
+    })
+  }
 
-  // Get corresponding roomIds from DB and then map those in the batchWrite
+  const totalDaysBooked =
+    getDaysBetween(
+      dayjs(bookingInputs.checkOutDate),
+      dayjs(bookingInputs.checkInDate)
+    ) + 1
 
-  const roomId = 3
+  const totalPrice = calculateTotalPrice(totalDaysBooked, numberOfRooms)
 
   try {
-    await db
-      .batchWrite({
-        RequestItems: {
-          Bonzai: [
-            {
-              PutRequest: {
-                Item: {
-                  PK: "b#" + bookingId,
-                  SK: "b#" + bookingId,
-                  EntityType: EntityTypes.BOOKING,
-                  ...bookingInputs
-                }
-              }
-            },
-            {
-              PutRequest: {
-                Item: {
-                  PK: "b#" + bookingId,
-                  SK: "r#" + roomId,
-                  EntityType: EntityTypes.ROOM,
-                  GSI1PK: "r#" + roomId,
-                  GSI1SK: "b#" + bookingId
-                }
-              }
-            }
-          ]
-        }
+    const availableRooms = (await getRooms()) as unknown as
+      | RoomItem[]
+      | undefined
+
+    if (!availableRooms || availableRooms?.length == 0) {
+      return sendResponse(404, {
+        success: false,
+        message: "Could not find any rooms."
       })
-      .promise()
+    }
+
+    const totalRoomsBooked = calculateTotalRoomsBooked(numberOfRooms)
+    const roomsByType = filterAllRoomTypes(availableRooms)
+    const {
+      SINGLE: singleRooms,
+      DOUBLE: doubleRooms,
+      SUITE: suiteRooms
+    } = roomsByType
+
+    if (
+      numberOfRooms.SINGLE > singleRooms.length ||
+      numberOfRooms.DOUBLE > doubleRooms.length ||
+      numberOfRooms.SUITE > suiteRooms.length
+    ) {
+      return sendResponse(400, {
+        success: false,
+        message: "Can't book more rooms than the available amount."
+      })
+    }
+
+    const availableRoomIds = getAvailableRoomIds(roomsByType, numberOfRooms)
+
+    await createBookingItems(bookingId, bookingInputs, availableRoomIds)
 
     return sendResponse(200, {
       success: true,
@@ -61,8 +84,8 @@ async function createBooking(
         lastName: bookingInputs.lastName,
         checkInDate: bookingInputs.checkInDate,
         checkOutDate: bookingInputs.checkOutDate,
-        numberRooms: 3,
-        price: 5800
+        numberRooms: totalRoomsBooked,
+        price: totalPrice
       }
     })
   } catch (error) {

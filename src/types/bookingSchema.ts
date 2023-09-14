@@ -25,8 +25,7 @@ export const BookingSchema = z.object({
       required_error: "Number of guests is required.",
       invalid_type_error: "Number of guests must be a number."
     })
-    .min(1)
-    .max(3),
+    .min(1),
   checkInDate: z
     .string({
       required_error: "Check in date is required.",
@@ -77,3 +76,4 @@ const BookingWithIdSchema = BookingSchema.merge(HasId)
 
 export type Booking = Required<z.infer<typeof BookingSchema>>
 export type BookingWithId = Required<z.infer<typeof BookingWithIdSchema>>
+export type NumberOfRoomTypes = Pick<Booking, "rooms">["rooms"]
