@@ -39,7 +39,7 @@ export async function getRooms() {
     })
     .promise()
 
-  if (Count === 0) {
+  if (!rooms || Count === 0) {
     throw new createHttpError.NotFound("Could not find any rooms.")
   }
 
