@@ -19,38 +19,32 @@ function createRoomParamsList() {
 
   shuffleArray(roomTypes)
 
-  const paramsList: DocumentClient.BatchWriteItemInput[] = []
+  const paramsList = []
 
   for (let i = 0; i < 20; i++) {
     const roomType = roomTypes[i % roomTypes.length] // Cycle through shuffled room types
-    const params: DocumentClient.BatchWriteItemInput = {
-      RequestItems: {
-        Bonzai: [
-          {
-            PutRequest: {
-              Item: {
-                PK: `r#${i + 1}`,
-                SK: `r#${i + 1}`,
-                GSI1PK: EntityTypes.ROOM,
-                GSI1SK: roomType,
-                EntityType: EntityTypes.ROOM,
-                Type: roomType,
-                MaxGuests:
-                  roomType === RoomType.SINGLE
-                    ? 1
-                    : roomType === RoomType.DOUBLE
-                    ? 2
-                    : 3,
-                PricePerNight:
-                  roomType === RoomType.SINGLE
-                    ? 500
-                    : roomType === RoomType.DOUBLE
-                    ? 1000
-                    : 1500
-              } as RoomItem
-            }
-          }
-        ]
+    const params = {
+      PutRequest: {
+        Item: {
+          PK: `r#${i + 1}`,
+          SK: `r#${i + 1}`,
+          GSI1PK: EntityTypes.ROOM,
+          GSI1SK: roomType,
+          EntityType: EntityTypes.ROOM,
+          Type: roomType,
+          MaxGuests:
+            roomType === RoomType.SINGLE
+              ? 1
+              : roomType === RoomType.DOUBLE
+              ? 2
+              : 3,
+          PricePerNight:
+            roomType === RoomType.SINGLE
+              ? 500
+              : roomType === RoomType.DOUBLE
+              ? 1000
+              : 1500
+        } as RoomItem
       }
     }
 
@@ -63,7 +57,11 @@ function createRoomParamsList() {
 export async function createRooms() {
   const paramsList = createRoomParamsList()
 
-  for (const params of paramsList) {
-    await db.batchWrite(params).promise()
-  }
+  await db
+    .batchWrite({
+      RequestItems: {
+        Bonzai: [...paramsList]
+      }
+    })
+    .promise()
 }
