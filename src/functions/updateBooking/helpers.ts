@@ -1,9 +1,10 @@
 import { db } from "@/services"
-import { Booking } from "@/types"
+import { Booking, EntityTypes, RoomItem } from "@/types"
 import {
   DocumentClient,
   ExpressionAttributeNameMap
 } from "aws-sdk/clients/dynamodb"
+import createHttpError from "http-errors"
 
 type Expression = {
   UpdateExpression: string
@@ -23,59 +24,72 @@ export async function getBookingById(bookingId: string) {
   return Items
 }
 
-// async function getRoomIds(rooms) {
-
-// }
+function getRoomIds(booking: Record<string, string>[]) {
+  return booking
+    .filter((booking) => booking.EntityType === EntityTypes.ROOM)
+    .map((room) => room?.SK)
+}
 
 export async function updateBookingItem(
   booking: DocumentClient.ItemList,
-  bookingInputs: Booking
+  bookingInputs: Booking,
+  availableRoomIds: string[]
 ) {
-  const { PK: bookingId, rooms } = booking[0]
+  const { PK: bookingId } = booking[0]
   const { numberGuests, checkInDate, checkOutDate } = bookingInputs
 
-  //   const roomIds = getRoomIds(rooms)
+  const roomIds = getRoomIds(booking)
 
-  await db
-    .transactWrite({
-      TransactItems: [
-        {
-          Update: {
-            TableName: "Bonzai",
-            Key: { PK: bookingId, SK: bookingId },
-            UpdateExpression:
-              "SET numberGuests = :numberGuests, checkInDate = :checkInDate, checkOutDate = :checkOutDate, GSI1SK = :GSI1SK",
-            ExpressionAttributeValues: {
-              ":numberGuests": numberGuests,
-              ":checkInDate": checkInDate,
-              ":checkOutDate": checkOutDate,
-              ":GSI1SK": checkInDate
-            },
-            ConditionExpression: "attribute_exists(PK)"
-          }
-        }
-        // {
-        //   Delete: {
-        //     TableName: "Bonzai",
-        //     Key: { PK: "b#" + bookingId },
-        //     ConditionExpression: "begins_with(SK, :prefix)",
-        //     ExpressionAttributeValues: {
-        //       ":prefix": "r#"
-        //     }
-        //   }
-        // }
-        // {
-        //   Update: {
-        //     TableName: "Bonzai",
-        //     Key: { PK: "b#" + bookingId, SK: "b#" + bookingId },
-        //     UpdateExpression: bookingUpdateExpression.UpdateExpression,
-        //     ExpressionAttributeNames:
-        //       bookingUpdateExpression.ExpressionAttributeNames,
-        //     ExpressionAttributeValues:
-        //       bookingUpdateExpression.ExpressionAttributeValues
-        //   }
-        // }
-      ]
-    })
-    .promise()
+  const deleteRoomExpressions = roomIds.map((roomId) => ({
+    Delete: {
+      TableName: "Bonzai",
+      Key: { PK: bookingId, SK: roomId }
+    }
+  }))
+
+  const createRoomExpressions = availableRoomIds.map((roomId) => ({
+    Put: {
+      TableName: "Bonzai",
+      Item: {
+        PK: bookingId,
+        SK: roomId,
+        EntityType: EntityTypes.ROOM,
+        GSI1PK: roomId,
+        GSI1SK: bookingId
+      }
+    }
+  }))
+
+  try {
+    await db
+      .transactWrite({
+        TransactItems: [
+          {
+            Update: {
+              TableName: "Bonzai",
+              Key: { PK: bookingId, SK: bookingId },
+              UpdateExpression:
+                "SET numberGuests = :numberGuests, checkInDate = :checkInDate, checkOutDate = :checkOutDate, GSI1SK = :GSI1SK",
+              ExpressionAttributeValues: {
+                ":numberGuests": numberGuests,
+                ":checkInDate": checkInDate,
+                ":checkOutDate": checkOutDate,
+                ":GSI1SK": checkInDate
+              },
+              ConditionExpression: "attribute_exists(PK)"
+            }
+          },
+          ...deleteRoomExpressions
+        ]
+      })
+      .promise()
+
+    await db
+      .transactWrite({
+        TransactItems: createRoomExpressions
+      })
+      .promise()
+  } catch (error) {
+    throw new createHttpError.BadRequest("Bad request.")
+  }
 }

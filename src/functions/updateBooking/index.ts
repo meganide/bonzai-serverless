@@ -1,12 +1,17 @@
 import { errorHandler, zodValidation } from "@/middlewares"
-import { Booking, BookingSchema } from "@/types"
+import { Booking, BookingSchema, RoomItem } from "@/types"
 import { sendResponse } from "@/utils"
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent } from "aws-lambda"
 import { AWSError } from "aws-sdk/lib/error"
 
-import { calculateMaxGuestsAllowed } from "../createBooking/helpers"
+import {
+  calculateMaxGuestsAllowed,
+  filterAllRoomTypes,
+  getAvailableRoomIds,
+  getRooms
+} from "../createBooking/helpers"
 import { getBookingById, updateBookingItem } from "./helpers"
 
 type PathParameters = {
@@ -35,14 +40,45 @@ export const updateBooking = async (event: APIGatewayProxyEvent) => {
       })
     }
 
-    const updatedBooking = await updateBookingItem(booking, bookingInputs)
+    const availableRooms = (await getRooms()) as unknown as
+      | RoomItem[]
+      | undefined
+
+    if (!availableRooms || availableRooms?.length == 0) {
+      return sendResponse(404, {
+        success: false,
+        message: "Could not find any rooms."
+      })
+    }
+
+    const roomsByType = filterAllRoomTypes(availableRooms)
+    const {
+      SINGLE: singleRooms,
+      DOUBLE: doubleRooms,
+      SUITE: suiteRooms
+    } = roomsByType
+
+    if (
+      bookingInputs.rooms.SINGLE > singleRooms.length ||
+      bookingInputs.rooms.DOUBLE > doubleRooms.length ||
+      bookingInputs.rooms.SUITE > suiteRooms.length
+    ) {
+      return sendResponse(400, {
+        success: false,
+        message: "Can't book more rooms than the available amount."
+      })
+    }
+
+    const availableRoomIds = getAvailableRoomIds(
+      roomsByType,
+      bookingInputs.rooms
+    )
+
+    await updateBookingItem(booking, bookingInputs, availableRoomIds)
 
     return sendResponse(200, {
       success: true,
-      message: "Booking has successfully been updated",
-      bookingInputs,
-      bookingId,
-      booking
+      message: "Booking has successfully been updated."
     })
   } catch (error) {
     console.log(error)
