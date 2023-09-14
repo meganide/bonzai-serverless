@@ -1,7 +1,7 @@
 import { errorHandler, zodValidation } from "@/middlewares"
 import { Booking, BookingSchema, RoomItem } from "@/types"
 import { sendResponse } from "@/utils"
-import { getDaysBetween } from "@/utils/date"
+import { getDaysBetween } from "@/utils"
 import middy from "@middy/core"
 import jsonBodyParser from "@middy/http-json-body-parser"
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"

@@ -7,7 +7,7 @@ import {
   RoomItemTypes,
   RoomType
 } from "@/types"
-import { roomTypeInfo } from "@/utils/constants"
+import { roomTypeInfo } from "@/utils"
 
 export function calculateMaxGuestsAllowed(rooms: NumberOfRoomTypes) {
   let maxGuestsAllowed = 0
