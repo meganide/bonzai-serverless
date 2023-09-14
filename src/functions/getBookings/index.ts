@@ -1,4 +1,5 @@
 import { db } from "@/services"
+import { EntityTypes } from "@/types"
 import { sendResponse } from "@/utils"
 import {
   APIGatewayProxyEvent,
@@ -12,17 +13,22 @@ export const handler = async (
   context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const { Items: allBookings } = await db
-      .scan({
+    const { Count: total, Items: bookings } = await db
+      .query({
         TableName: "Bonzai",
-        FilterExpression: "begins_with(PK, :pk)",
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :pkValue",
         ExpressionAttributeValues: {
-          ":pk": "b"
+          ":pkValue": EntityTypes.BOOKING
         }
       })
       .promise()
 
-    return sendResponse(200, { sucess: true, allBookings })
+    return sendResponse(200, {
+      sucess: true,
+      total,
+      bookings
+    })
   } catch (error) {
     console.log(error)
     if (error instanceof Error) {

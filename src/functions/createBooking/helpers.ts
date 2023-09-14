@@ -41,7 +41,7 @@ export async function getRooms() {
       IndexName: "GSI1",
       KeyConditionExpression: "GSI1PK = :pkValue",
       ExpressionAttributeValues: {
-        ":pkValue": "Room"
+        ":pkValue": EntityTypes.ROOM
       }
     })
     .promise()
@@ -96,6 +96,8 @@ export async function createBookingItems(
       Item: {
         PK: bookingId,
         SK: bookingId,
+        GSI1PK: EntityTypes.BOOKING,
+        GSI1SK: bookingInputs.checkInDate,
         EntityType: EntityTypes.BOOKING,
         ...bookingInputs
       } as any
