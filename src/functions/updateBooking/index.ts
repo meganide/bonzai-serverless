@@ -34,7 +34,7 @@ export const updateBooking = async (event: APIGatewayProxyEvent) => {
 
     return sendResponse(200, {
       success: true,
-      message: "Booking has successfully been updated."
+      message: "The booking has been updated successfully."
     })
   } catch (error) {
     if (error instanceof HttpError) {

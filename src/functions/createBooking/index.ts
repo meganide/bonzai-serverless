@@ -39,7 +39,7 @@ async function createBooking(
     const availableRoomIds = getAvailableRoomIds(roomsByType, numberOfRooms)
     await createBookingItems(bookingId, bookingInputs, availableRoomIds)
 
-    return sendResponse(200, {
+    return sendResponse(201, {
       success: true,
       booking: {
         bookingNumber: bookingId,

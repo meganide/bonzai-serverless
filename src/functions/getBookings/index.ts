@@ -1,5 +1,3 @@
-import { db } from "@/services"
-import { EntityTypes } from "@/types"
 import { sendResponse } from "@/utils"
 import {
   APIGatewayProxyEvent,
@@ -8,21 +6,14 @@ import {
 } from "aws-lambda"
 import { AWSError } from "aws-sdk/lib/error"
 
+import { getBookings } from "./helpers"
+
 export const handler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const { Count: total, Items: bookings } = await db
-      .query({
-        TableName: "Bonzai",
-        IndexName: "GSI1",
-        KeyConditionExpression: "GSI1PK = :pkValue",
-        ExpressionAttributeValues: {
-          ":pkValue": EntityTypes.BOOKING
-        }
-      })
-      .promise()
+    const { Count: total, Items: bookings } = await getBookings()
 
     return sendResponse(200, {
       sucess: true,
@@ -31,12 +22,6 @@ export const handler = async (
     })
   } catch (error) {
     console.log(error)
-    if (error instanceof Error) {
-      return sendResponse(500, {
-        success: false,
-        message: error.message
-      })
-    }
     const awsError = error as AWSError
     return sendResponse(awsError.statusCode ?? 500, {
       success: false,
