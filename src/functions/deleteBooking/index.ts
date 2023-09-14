@@ -1,26 +1,12 @@
 import { db } from "@/services"
 import { sendResponse } from "@/utils"
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
+import {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context
+} from "aws-lambda"
 
-async function findMyBooking(partitionKey: number | string) {
-  const params = {
-    TableName: "Bonzai",
-    KeyConditionExpression: "PK = :partitionKey",
-    ExpressionAttributeValues: { ":partitionKey": "b#" + partitionKey }
-  }
-
-  const { Items } = await db
-    .query(params, (error, data) => {
-      if (error) {
-        console.log(error)
-      } else {
-        console.log(data)
-      }
-    })
-    .promise()
-
-  return Items
-}
+import { getBookingById } from "../updateBooking/helpers"
 
 async function deleteBooking(partitionKey: number | string) {
   const params = {
@@ -51,16 +37,16 @@ function cancelMyBooking(checkInDate: string): boolean {
     return false
   }
 }
-interface BookingId extends APIGatewayProxyEvent {
-  bookingId: number | string
+type PathParameters = {
+  bookingId: string
 }
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const { bookingId } = event.pathParameters as unknown as BookingId
-    const booking = await findMyBooking(bookingId)
+    const { bookingId } = event.pathParameters as unknown as PathParameters
+    const booking = await getBookingById(bookingId)
 
     if (!booking || !booking.length) {
       throw new Error("No booking found")

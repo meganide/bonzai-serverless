@@ -21,7 +21,7 @@ import {
 async function createBooking(
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-  const bookingId = "b#" + nanoid()
+  const bookingId = nanoid()
   const { rooms: numberOfRooms, ...bookingInputs } =
     event.body as unknown as Booking
 

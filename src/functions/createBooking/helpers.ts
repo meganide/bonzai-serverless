@@ -82,11 +82,11 @@ export async function createBookingItems(
   const bookingItems = availableRoomIds.map((roomId) => ({
     PutRequest: {
       Item: {
-        PK: bookingId,
+        PK: "b#" + bookingId,
         SK: roomId,
         EntityType: EntityTypes.ROOM,
         GSI1PK: roomId,
-        GSI1SK: bookingId
+        GSI1SK: "b#" + bookingId
       }
     }
   }))
@@ -94,8 +94,8 @@ export async function createBookingItems(
   bookingItems.unshift({
     PutRequest: {
       Item: {
-        PK: bookingId,
-        SK: bookingId,
+        PK: "b#" + bookingId,
+        SK: "b#" + bookingId,
         GSI1PK: EntityTypes.BOOKING,
         GSI1SK: bookingInputs.checkInDate,
         EntityType: EntityTypes.BOOKING,
