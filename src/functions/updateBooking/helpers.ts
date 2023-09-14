@@ -1,16 +1,7 @@
 import { db } from "@/services"
-import { Booking, EntityTypes, RoomItem } from "@/types"
-import {
-  DocumentClient,
-  ExpressionAttributeNameMap
-} from "aws-sdk/clients/dynamodb"
+import { Booking, EntityTypes } from "@/types"
+import { DocumentClient } from "aws-sdk/clients/dynamodb"
 import createHttpError from "http-errors"
-
-type Expression = {
-  UpdateExpression: string
-  ExpressionAttributeNames: ExpressionAttributeNameMap
-  ExpressionAttributeValues: { [key: string]: any }
-}
 
 export async function getBookingById(bookingId: string) {
   const params = {
@@ -19,7 +10,13 @@ export async function getBookingById(bookingId: string) {
     ExpressionAttributeValues: { ":partitionKey": "b#" + bookingId }
   }
 
-  const { Items } = await db.query(params).promise()
+  const { Items, Count } = await db.query(params).promise()
+
+  if (Count === 0) {
+    throw new createHttpError.NotFound(
+      `Booking with the specified id ${bookingId} could not be found`
+    )
+  }
 
   return Items
 }
@@ -90,6 +87,6 @@ export async function updateBookingItem(
       })
       .promise()
   } catch (error) {
-    throw new createHttpError.BadRequest("Bad request.")
+    throw new createHttpError.BadRequest("Failed to update booking.")
   }
 }

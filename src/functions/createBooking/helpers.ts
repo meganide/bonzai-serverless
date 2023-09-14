@@ -8,14 +8,7 @@ import {
   RoomType
 } from "@/types"
 import { roomTypeInfo } from "@/utils"
-
-export function calculateMaxGuestsAllowed(rooms: NumberOfRoomTypes) {
-  let maxGuestsAllowed = 0
-  Object.values(RoomType).forEach((roomType) => {
-    maxGuestsAllowed += roomTypeInfo[roomType].maxGuests * rooms[roomType]
-  })
-  return maxGuestsAllowed
-}
+import createHttpError from "http-errors"
 
 export function calculateTotalRoomsBooked(rooms: NumberOfRoomTypes) {
   return Object.values(rooms).reduce((total, roomCount) => total + roomCount, 0)
@@ -35,7 +28,7 @@ export function calculateTotalPrice(
 }
 
 export async function getRooms() {
-  const { Items: rooms } = await db
+  const { Items: rooms, Count } = await db
     .query({
       TableName: "Bonzai",
       IndexName: "GSI1",
@@ -46,6 +39,10 @@ export async function getRooms() {
     })
     .promise()
 
+  if (Count === 0) {
+    throw new createHttpError.NotFound("Could not find any rooms.")
+  }
+
   return rooms
 }
 
@@ -53,12 +50,27 @@ export function filterRoomsByType(rooms: RoomItem[], type: RoomType) {
   return rooms.filter((room) => room.Type === type)
 }
 
-export function filterAllRoomTypes(rooms: RoomItem[]) {
-  return {
+export function filterAllRoomTypes(
+  rooms: RoomItem[],
+  numberOfRooms: NumberOfRoomTypes
+) {
+  const roomTypes = {
     [RoomType.SINGLE]: filterRoomsByType(rooms, RoomType.SINGLE),
     [RoomType.DOUBLE]: filterRoomsByType(rooms, RoomType.DOUBLE),
     [RoomType.SUITE]: filterRoomsByType(rooms, RoomType.SUITE)
   }
+
+  if (
+    numberOfRooms.SINGLE > roomTypes.SINGLE.length ||
+    numberOfRooms.DOUBLE > roomTypes.DOUBLE.length ||
+    numberOfRooms.SUITE > roomTypes.SUITE.length
+  ) {
+    throw new createHttpError.BadRequest(
+      "Can't book more rooms than the available amount."
+    )
+  }
+
+  return roomTypes
 }
 
 export function getAvailableRoomIds(
