@@ -9,7 +9,9 @@ export async function getBookings() {
       KeyConditionExpression: "GSI1PK = :pkValue",
       ExpressionAttributeValues: {
         ":pkValue": EntityTypes.BOOKING
-      }
+      },
+      ProjectionExpression:
+        "bookingNumber, checkInDate, checkOutDate, numberGuests, numberOfRooms, firstName, lastName"
     })
     .promise()
 }

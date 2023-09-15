@@ -111,7 +111,9 @@ function createBookingItemExpressions(
         GSI1PK: EntityTypes.BOOKING,
         GSI1SK: bookingInputs.checkInDate,
         EntityType: EntityTypes.BOOKING,
-        ...bookingInputs
+        ...bookingInputs,
+        bookingNumber: bookingId,
+        numberOfRooms: availableRoomIds.length
       } as any
     }
   })

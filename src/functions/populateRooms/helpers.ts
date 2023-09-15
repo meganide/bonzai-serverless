@@ -1,6 +1,5 @@
 import { db } from "@/services"
 import { EntityTypes, RoomItem, RoomType } from "@/types"
-import { DocumentClient } from "aws-sdk/clients/dynamodb"
 
 function shuffleArray<T>(array: T[]) {
   // Fisher-Yates shuffle algorithm
@@ -60,7 +59,7 @@ export async function createRooms() {
   await db
     .batchWrite({
       RequestItems: {
-        Bonzai: [...paramsList]
+        Bonzai: paramsList
       }
     })
     .promise()

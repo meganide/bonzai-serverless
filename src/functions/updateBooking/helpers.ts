@@ -67,9 +67,10 @@ export async function updateBookingItem(
               TableName: "Bonzai",
               Key: { PK: bookingId, SK: bookingId },
               UpdateExpression:
-                "SET numberGuests = :numberGuests, checkInDate = :checkInDate, checkOutDate = :checkOutDate, GSI1SK = :GSI1SK",
+                "SET numberGuests = :numberGuests, numberOfRooms = :numberOfRooms checkInDate = :checkInDate, checkOutDate = :checkOutDate, GSI1SK = :GSI1SK",
               ExpressionAttributeValues: {
                 ":numberGuests": numberGuests,
+                ":numberOfRooms": availableRoomIds.length,
                 ":checkInDate": checkInDate,
                 ":checkOutDate": checkOutDate,
                 ":GSI1SK": checkInDate
