@@ -1,0 +1,157 @@
+_type: export
+__export_format: 4
+__export_date: 2023-09-15T09:17:57.807Z
+__export_source: insomnia.desktop.app:v2023.5.8
+resources:
+  - _id: req_767887ecc2b94555904ab85d8721b452
+    parentId: wrk_ad832c43fa3b4d06adf7286c5d1907e2
+    modified: 1694769266020
+    created: 1694767131929
+    url: https://06wb6x6hs8.execute-api.eu-north-1.amazonaws.com/api/bookings/aCsRE4mdzYDSUoxL8332z
+    name: Delete Booking
+    description: ""
+    method: DELETE
+    body: {}
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/2023.5.8
+    authentication: {}
+    metaSortKey: -1694767131929
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_ad832c43fa3b4d06adf7286c5d1907e2
+    parentId: null
+    modified: 1694442725610
+    created: 1694442725610
+    name: Bonzai
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_619cde17982645a6a5efddf0c02c84e0
+    parentId: wrk_ad832c43fa3b4d06adf7286c5d1907e2
+    modified: 1694684816745
+    created: 1694681697192
+    url: https://06wb6x6hs8.execute-api.eu-north-1.amazonaws.com/api/bookings
+    name: Get Bookings
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/2023.5.8
+    authentication: {}
+    metaSortKey: -1694681697192
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_0c129155db484b5ca8822c2f8ae2838b
+    parentId: wrk_ad832c43fa3b4d06adf7286c5d1907e2
+    modified: 1694769423038
+    created: 1694442727977
+    url: https://06wb6x6hs8.execute-api.eu-north-1.amazonaws.com/api/bookings
+    name: Create Booking
+    description: ""
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"firstName": "renas",
+        	"lastName": "hassan",
+        	"email": "renas@lol.se",
+        	"numberGuests": 6,
+        	"checkInDate": "2023-09-30",
+        	"checkOutDate": "2030-12-12",
+        	"rooms": {
+        		"SINGLE": 5,
+        		"DOUBLE": 2,
+        		"SUITE": 3 
+        	}
+        }
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: Insomnia/2023.5.7
+    authentication: {}
+    metaSortKey: -1694442727977
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_e93b22c3230a42b2bc1d927386bf63f8
+    parentId: wrk_ad832c43fa3b4d06adf7286c5d1907e2
+    modified: 1694769436286
+    created: 1694767126406
+    url: https://06wb6x6hs8.execute-api.eu-north-1.amazonaws.com/api/bookings/u1rzFfWkI0Yx4c0oxVz-_
+    name: Update Booking
+    description: ""
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"firstName": "renas",
+        	"lastName": "hassan",
+        	"email": "renas@lol.se",
+        	"numberGuests": 2,
+        	"checkInDate": "2024-09-30",
+        	"checkOutDate": "2030-12-12",
+        	"rooms": {
+        		"SINGLE": 5,
+        		"DOUBLE": 1,
+        		"SUITE": 1 
+        	}
+        }
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: Insomnia/2023.5.7
+    authentication: {}
+    metaSortKey: -1694178347767.5
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: env_741e7ea208231895e3ef7180ce30317da01ae9d5
+    parentId: wrk_ad832c43fa3b4d06adf7286c5d1907e2
+    modified: 1694442725614
+    created: 1694442725614
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1694442725614
+    _type: environment
+  - _id: jar_741e7ea208231895e3ef7180ce30317da01ae9d5
+    parentId: wrk_ad832c43fa3b4d06adf7286c5d1907e2
+    modified: 1694442725616
+    created: 1694442725616
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
