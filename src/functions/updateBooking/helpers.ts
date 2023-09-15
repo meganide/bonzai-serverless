@@ -67,7 +67,7 @@ export async function updateBookingItem(
               TableName: "Bonzai",
               Key: { PK: bookingId, SK: bookingId },
               UpdateExpression:
-                "SET numberGuests = :numberGuests, numberOfRooms = :numberOfRooms checkInDate = :checkInDate, checkOutDate = :checkOutDate, GSI1SK = :GSI1SK",
+                "SET numberGuests = :numberGuests, numberOfRooms = :numberOfRooms, checkInDate = :checkInDate, checkOutDate = :checkOutDate, GSI1SK = :GSI1SK",
               ExpressionAttributeValues: {
                 ":numberGuests": numberGuests,
                 ":numberOfRooms": availableRoomIds.length,
@@ -89,6 +89,7 @@ export async function updateBookingItem(
       })
       .promise()
   } catch (error) {
+    console.log(error)
     throw new createHttpError.BadRequest("Failed to update booking.")
   }
 }
