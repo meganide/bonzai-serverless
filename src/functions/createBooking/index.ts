@@ -32,7 +32,7 @@ async function createBooking(
       dayjs(bookingInputs.checkOutDate),
       dayjs(bookingInputs.checkInDate)
     ) + 1
-  console.log("totalDaysBooked", totalDaysBooked)
+
   try {
     const availableRooms = (await getRooms()) as unknown as RoomItem[]
     const roomsByType = filterAllRoomTypes(availableRooms, numberOfRooms)
